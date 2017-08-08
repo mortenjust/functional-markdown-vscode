@@ -3,9 +3,13 @@
 var vscode = require('vscode');
 var chrono = require('chrono-node')
 var moment = require('moment')
+var momentTz = require("moment-timezone")
 var math = require('mathjs')
 var fetch = require('node-fetch')
 var autoSaveTimer;
+var decorationTimeout;
+var timezoneDecoration;
+var timezoneDecos = [];
 
 
 // this method is called when your extension is activated
@@ -14,9 +18,9 @@ function activate(context) {
     console.log("activated, removing line numbers")
     vscode.window.activeTextEditor.options.lineNumbers = 0; // don't need these for notes
     
-    startAutoSaving()
     registerCompletions()
     fetchAndImportCurrencies()
+    defineDecorations()
     
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => documentChanged(e)));
 
@@ -38,26 +42,17 @@ function activate(context) {
 }
 exports.activate = activate;
 
-function startAutoSaving(){
-    // moving this to documentChanged
-    // console.log("Starting autosave")
-    // setInterval(function() {
-    //     vscode.workspace.saveAll()    
-    //     console.log("Autosaved.")
-    // }, 10000);    
-}
-
 function maybeAutoSave(){    
     clearTimeout(autoSaveTimer)
     autoSaveTimer = setTimeout(function() {
-        console.log("...aaaand saving all")
+        // console.log("...aaaand saving all")
         vscode.workspace.saveAll() 
     }, 1000);
 }
 
-function documentChanged(e) {
-    
+function documentChanged(e) {    
     maybeAutoSave()
+    triggerUpdateDecorations()
     
     const justTyped = e.contentChanges[0].text;
     const pos = vscode.window.activeTextEditor.selection.active;
@@ -140,26 +135,72 @@ function insertAndSelectStringAtPos(insertPos, str){
 
 function registerCompletions(){
 
+       vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems() {
+            var ci = new vscode.CompletionItem("tomorrow", vscode.CompletionItemKind.Reference)
+            ci.insertText = "" + moment().add(1, 'days').format("ddd MMMM Do YYYY")
+            return [ci]
+        }
+       });
+
+        // now
         	vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("time", vscode.CompletionItemKind.Text)
             ci.insertText = "" + moment().format("h:mm a")
+            ci.kind = vscode.CompletionItemKind.Reference
             return [ci]
         }
-    });
+        });
+
+        vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems() {
+            var ci = new vscode.CompletionItem("now", vscode.CompletionItemKind.Text)
+            ci.insertText = "" + moment().format("h:mm a")
+            ci.kind = vscode.CompletionItemKind.Reference
+            return [ci]
+        }
+        });
+
 
         	vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("date", vscode.CompletionItemKind.Text)
-            ci.insertText = "" + moment().format("MMMM Do YYYY")
+            ci.insertText = "" + moment().format("ddd MMMM Do YYYY")
+            ci.commitCharacters = ['\t']
+            ci.kind = vscode.CompletionItemKind.Reference
             return [ci]
         }
-    });
+       });
+
+
+        vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems() {
+            var ci = new vscode.CompletionItem("today", vscode.CompletionItemKind.Reference)
+            ci.insertText = "" + moment().format("ddd MMMM Do YYYY")
+            return [ci]
+        }
+       });
+
+        vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems() {
+            var ci = new vscode.CompletionItem("yesterday", vscode.CompletionItemKind.Reference)
+            ci.insertText = "" + moment().add(-1, 'days').format("ddd MMMM Do YYYY")               
+            return [ci]
+        }
+       });
 
         	vscode.languages.registerCompletionItemProvider('markdown', {
 		provideCompletionItems() {
-            var ci = new vscode.CompletionItem("datetime", vscode.CompletionItemKind.Text)
-            ci.insertText = "" + moment().format("MMMM Do YYYY h:mm a")
+            var ci = new vscode.CompletionItem("datetime", vscode.CompletionItemKind.Reference)
+            ci.insertText = "" + moment().format("ddd MMMM Do YYYY h:mm a")
+            return [ci]
+        }
+    });
+        	vscode.languages.registerCompletionItemProvider('markdown', {
+		provideCompletionItems() {
+            var ci = new vscode.CompletionItem("this week number", vscode.CompletionItemKind.Reference)
+            ci.insertText = "" + moment().week()
             return [ci]
         }
     });
@@ -193,6 +234,90 @@ function deactivate() {
           return Object.keys(data.rates).concat(data.base);
         });
   }
+
+// #decorations
+
+function defineDecorations(){
+    timezoneDecoration = vscode.window.createTextEditorDecorationType({
+        borderWidth: '1px',
+        borderStyle: 'none none dashed none',
+        borderColor: '#5c6371',
+        // backgroundColor: 'blue',        
+        
+        textDecoration: 'font-size:70px',
+        // overviewRulerLane: vscode.OverviewRulerLane.Right
+        // overviewRulerColor: 'blue', // this is the scroll bar area
+        
+    })
+    triggerUpdateDecorations()    
+}
+
+function triggerUpdateDecorations(){
+    		if (decorationTimeout) {
+			clearTimeout(decorationTimeout);
+		}
+		decorationTimeout = setTimeout(updateDecorations, 500);
+}
+
+function timeStringForIdentifier(i, friendlyName){
+    return "**" + moment().tz(i).format("HH:MM ddd")  + "** \n in "+friendlyName
+}
+
+function updateDecoration(trigger, hoverMsg, decorationType){
+    var regEx = trigger
+    let activeEditor = vscode.window.activeTextEditor;
+    const text = activeEditor.document.getText();
+    let match;
+
+	
+    while (match = regEx.exec(text)) {
+        
+        const startPos = activeEditor.document.positionAt(match.index);
+        const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+        const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: hoverMsg };
+        timezoneDecos.push(decoration)
+
+    }
+    console.log("setting decos")
+    console.log(timezoneDecos)
+
+    
+}
+
+function updateTimezoneDecoration(cityNameRegexp, cityName){
+    // helper for timezone 
+    updateDecoration(cityNameRegexp, timeInCityString(cityName), timezoneDecoration)
+}
+
+function updateDecorations(){
+    let activeEditor = vscode.window.activeTextEditor;
+    timezoneDecos = []
+    console.log("updating decorations")
+    updateTimezoneDecoration(/London/gm, "London")
+    updateTimezoneDecoration(/Copenhagen/gm, "Copenhagen") // these override each other for some reason. TODO
+    updateTimezoneDecoration(/New York/gm, "New York")    
+    activeEditor.setDecorations(timezoneDecoration, timezoneDecos) 
+}
+
+function timeInCityString(city){
+    var timeString;
+    // moment().tz("Europe/London").format("HH:MM dddd")
+    switch (city) {
+        case "London":
+            timeString = timeStringForIdentifier("Europe/London", "London, UK")
+            break;    
+        case "Copenhagen":
+            timeString = timeStringForIdentifier("Europe/Copenhagen", "Copenhagen, Denmark")
+            break;
+        case "New York":
+            timeString = timeStringForIdentifier("America/New_York", "New York, NY")
+            break;
+        default:
+            break;
+    }
+    return timeString;
+}
+
 
 
 exports.deactivate = deactivate;
