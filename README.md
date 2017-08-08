@@ -1,65 +1,33 @@
-# functional-markdown README
+# Functional markdown
 
-This is the README for your extension "functional-markdown". After writing up a brief description, we recommend including the following sections.
+Markdown's spreadsheet moment
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Local time
+Enter a supported city, then hover the city's name to see the local time
+```markdown
+Copenhagen, New York, London
+```
 
-For example if there is an image subfolder under your extension project workspace:
+### Math solver
+Enter a math problem, then `=` or start bracket
+```markdown
+3 + 5 = 8.00
+```
 
-\!\[feature X\]\(images/feature-x.png\)
+### Time math 
+Enter a time math problem, then `=` or start bracket
+```markdown
+3 days + 39 hours = 4.63 days
+today + 200 hours = Aug 8th 2017, 12:00 pm
+200 seconds in minutes (3.33 minutes)
+```
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Currency converter
+Enter a currency conversion, then `=` or start bracket
+```markdown
+200 USD in EUR = 169.29 EUR
+633 EUR in GBP (573.99 GBP)
+```
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
