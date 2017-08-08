@@ -139,6 +139,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("tomorrow", vscode.CompletionItemKind.Reference)
             ci.insertText = "" + moment().add(1, 'days').format("ddd MMMM Do YYYY")
+            ci.label = "Tomorrow: " + ci.insertText
+            ci.filterText = "tomorrow"
             return [ci]
         }
        });
@@ -149,6 +151,8 @@ function registerCompletions(){
             var ci = new vscode.CompletionItem("time", vscode.CompletionItemKind.Text)
             ci.insertText = "" + moment().format("h:mm a")
             ci.kind = vscode.CompletionItemKind.Reference
+            ci.label = ci.insertText
+            ci.filterText = "time"
             return [ci]
         }
         });
@@ -158,6 +162,8 @@ function registerCompletions(){
             var ci = new vscode.CompletionItem("now", vscode.CompletionItemKind.Text)
             ci.insertText = "" + moment().format("h:mm a")
             ci.kind = vscode.CompletionItemKind.Reference
+            ci.label = ci.insertText
+            ci.filterText = "now"
             return [ci]
         }
         });
@@ -167,6 +173,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("date", vscode.CompletionItemKind.Text)
             ci.insertText = "" + moment().format("ddd MMMM Do YYYY")
+            ci.label = "" + moment().format("ddd MMMM Do YYYY")
+            ci.filterText = "date"
             ci.commitCharacters = ['\t']
             ci.kind = vscode.CompletionItemKind.Reference
             return [ci]
@@ -178,6 +186,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("today", vscode.CompletionItemKind.Reference)
             ci.insertText = "" + moment().format("ddd MMMM Do YYYY")
+            ci.label = "Today: " + moment().format("ddd MMMM Do YYYY")            
+            ci.filterText = "today"
             return [ci]
         }
        });
@@ -186,6 +196,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("yesterday", vscode.CompletionItemKind.Reference)
             ci.insertText = "" + moment().add(-1, 'days').format("ddd MMMM Do YYYY")               
+            ci.label = "" + moment().add(-1, 'days').format("ddd MMMM Do YYYY")               
+            ci.filterText = "yesterday"
             return [ci]
         }
        });
@@ -194,6 +206,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("datetime", vscode.CompletionItemKind.Reference)
             ci.insertText = "" + moment().format("ddd MMMM Do YYYY h:mm a")
+            ci.label = ci.insertText
+            ci.filterText = "datetime"
             return [ci]
         }
     });
@@ -201,6 +215,8 @@ function registerCompletions(){
 		provideCompletionItems() {
             var ci = new vscode.CompletionItem("this week number", vscode.CompletionItemKind.Reference)
             ci.insertText = "" + moment().week()
+            ci.label = "Week number (" + moment().week() + ")"
+            ci.filterText = "week number"
             return [ci]
         }
     });
