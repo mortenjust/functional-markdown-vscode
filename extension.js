@@ -5,13 +5,16 @@ var chrono = require('chrono-node')
 var moment = require('moment')
 var math = require('mathjs')
 var fetch = require('node-fetch')
+var autoSaveTimer;
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
     console.log("activated, removing line numbers")
     vscode.window.activeTextEditor.options.lineNumbers = 0; // don't need these for notes
-
+    
+    startAutoSaving()
     registerCompletions()
     fetchAndImportCurrencies()
     
@@ -35,7 +38,27 @@ function activate(context) {
 }
 exports.activate = activate;
 
+function startAutoSaving(){
+    // moving this to documentChanged
+    // console.log("Starting autosave")
+    // setInterval(function() {
+    //     vscode.workspace.saveAll()    
+    //     console.log("Autosaved.")
+    // }, 10000);    
+}
+
+function maybeAutoSave(){    
+    clearTimeout(autoSaveTimer)
+    autoSaveTimer = setTimeout(function() {
+        console.log("...aaaand saving all")
+        vscode.workspace.saveAll() 
+    }, 1000);
+}
+
 function documentChanged(e) {
+    
+    maybeAutoSave()
+    
     const justTyped = e.contentChanges[0].text;
     const pos = vscode.window.activeTextEditor.selection.active;
     const doc = vscode.window.activeTextEditor.document;

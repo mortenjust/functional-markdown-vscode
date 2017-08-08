@@ -17,8 +17,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.sayHello",
-        "title": "Hello World"
+        "command": "functionalMarkdown-hello",
+        "title": "Hellsssso World"
       }
     ]
   },
