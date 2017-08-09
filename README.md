@@ -1,6 +1,6 @@
 # Functional markdown
 
-Markdown's spreadsheet moment
+Markdown's spreadsheet moment.
 
 ## Features
 
@@ -33,3 +33,4 @@ Enter a currency conversion, then `=` or start bracket
 
 ### Thoughtful autosave
 Saves entire notebook 1 second of inactivity in the current document. 
+
