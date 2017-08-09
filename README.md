@@ -31,3 +31,5 @@ Enter a currency conversion, then `=` or start bracket
 633 EUR in GBP (573.99 GBP)
 ```
 
+### Thoughtful autosave
+Saves entire notebook 1 second of inactivity in the current document. 
