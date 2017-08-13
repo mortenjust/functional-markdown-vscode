@@ -101,7 +101,7 @@ function documentChanged(e) {
         var queryString = "te";
         var startChar = startPos.character
         var spacePadded = false
-        var stopChars=/[.\n?!:\-]/ // periods, newlines, colons, hyphens
+        var stopChars=/[.\n?!\-]/ // periods, newlines, colons, hyphens
 
         // while (!queryString.includes(stopChars) && (startPos.character != 0)) {
 
@@ -120,7 +120,7 @@ function documentChanged(e) {
 
         // 9am in san francisco in copenhagen = 
         var regexTimeInIn = /(\d+[ap]m) in (.+) in (.*)/
-        var regexTimeIn = /(\d+[ap]m) in (.+)/
+        var regexTimeIn = /((?:\d+:)*\d+(?:[ap]m)*) in ([A-Za-z]+)/
 
         if (regexTimeInIn.test(queryString)) {
             console.log("Okay, timezone tested positive")
@@ -134,8 +134,9 @@ function documentChanged(e) {
             var fromTz =  getTimezoneForUserInput(fromCity)
             var toTz = getTimezoneForUserInput(toCity)
 
-            formattedResult = moment.tz(hhmm, "hA", fromTz.utc[0]).tz(toTz.utc[0]).format('h:mma')
-        
+            formattedResult = moment.tz(hhmm, "h:mmA", fromTz.utc[0]).tz(toTz.utc[0]).format('h:mma')
+            formattedResult = cleanUpTimeResult(formattedResult)
+
             // 9am in Berlin =
         } else if (regexTimeIn.test(queryString)) {
                 var r = regexTimeIn.exec(queryString)
@@ -147,11 +148,11 @@ function documentChanged(e) {
                 const localZone = moment.tz.guess()                 
                 const geo = geoip.lookup(externalIp);
                 console.log('here sthe geo log');
-                
-                
+                            
                 console.log(geo.city)
 
-                formattedResult = moment.tz(hhmm, "hA", fromTz.utc[0]).tz(localZone).format("h:mma") + " in "+geo.city;
+                formattedResult = moment.tz(hhmm, "h:mmA", fromTz.utc[0]).tz(localZone).format("h:mma") + " in "+geo.city;
+                formattedResult = cleanUpTimeResult(formattedResult)
 
         }  else { 
                 // second test: Is it a date arithmetic? 
@@ -175,6 +176,11 @@ function documentChanged(e) {
         if(spacePadded){formattedResult = " " + formattedResult}
         insertAndSelectStringAtPos(insertPos, formattedResult)
     }
+}
+
+function cleanUpTimeResult(t){
+    var nt = t.replace(":00", "")
+    return nt
 }
 
 function getTimezoneForUserInput(userInput){
