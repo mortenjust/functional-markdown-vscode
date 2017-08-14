@@ -101,7 +101,7 @@ function documentChanged(e) {
         var queryString = "te";
         var startChar = startPos.character
         var spacePadded = false
-        var stopChars=/[.\n?!\-]/ // periods, newlines, colons, hyphens
+        var stopChars=/[\n?!\-]/ // periods, newlines, colons, hyphens
 
         // while (!queryString.includes(stopChars) && (startPos.character != 0)) {
 
@@ -121,9 +121,15 @@ function documentChanged(e) {
         // 9am in san francisco in copenhagen = 
         var regexTimeInIn = /(\d+[ap]m) in (.+) in (.*)/
         var regexTimeIn = /((?:\d+:)*\d+(?:[ap]m)*) in ([A-Za-z]+)/
+        // var regexPctOf = /([\d]+[.\d]*) ?% of ([\d]+[.\d]*)/
+        var regexPctOf = /([\d\.]+) ?% of ([\d\.]+)/
+
+        // console.log('Testing !'+queryString+"! for PctOf: "+regexPctOf.test(queryString));
+        // console.log(regexPctOf.exec(queryString))
+
 
         if (regexTimeInIn.test(queryString)) {
-            console.log("Okay, timezone tested positive")
+            console.log("> regexTimeInIn")
             var tzResult = regexTimeInIn.exec(queryString)
             // console.log(tzResult)
             var hhmm = tzResult[1]
@@ -139,21 +145,26 @@ function documentChanged(e) {
 
             // 9am in Berlin =
         } else if (regexTimeIn.test(queryString)) {
+                console.log("> regexTimeIn")
                 var r = regexTimeIn.exec(queryString)
                 var hhmm = r[1]
                 var fromTz = getTimezoneForUserInput(r[2])
-                // console.log("ready to single-convert "+ hhmm +" from city:"+r[2]+" ")
-                // console.log(fromTz)
 
                 const localZone = moment.tz.guess()                 
                 const geo = geoip.lookup(externalIp);
-                console.log('here sthe geo log');
-                            
                 console.log(geo.city)
 
                 formattedResult = moment.tz(hhmm, "h:mmA", fromTz.utc[0]).tz(localZone).format("h:mma") + " in "+geo.city;
                 formattedResult = cleanUpTimeResult(formattedResult)
 
+        } else if (regexPctOf.test(queryString)) { // 20 % of 100 =
+            console.log('> regexPctOf');            
+            var r = regexPctOf.exec(queryString)
+            var pct = parseFloat(r[1])
+            var n = parseFloat(r[2])
+            console.log(pct + " / 100 * " + n)
+            console.log(r)
+            var formattedResult = "" + math.format((pct/100 * n), {notation:'fixed', precision: 2}).toLocaleString()
         }  else { 
                 // second test: Is it a date arithmetic? 
                 // third test: is it a general math query?
@@ -339,6 +350,7 @@ function deactivate() {
           math.createUnit(data.base)
           Object.keys(data.rates).forEach(function (currency) {
             math.createUnit(currency, math.unit(1 / data.rates[currency], data.base));
+            math.createUnit(currency.toLowerCase(), math.unit(1 / data.rates[currency], data.base));
           });
           // return an array with all available currencies
           return Object.keys(data.rates).concat(data.base);
@@ -658,6 +670,12 @@ var timezones = [
         "America/Montreal",
         "America/Nassau",
         "America/New_York",
+        "Boston", 
+        "BOS",
+        "the east coast",
+        "dc", 
+        "washington dc",
+        "d.c.",
         "America/Nipigon",
         "America/Pangnirtung",
         "America/Port-au-Prince",
