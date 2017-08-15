@@ -41,6 +41,7 @@
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.13",
     "node-fetch": "^1.7.1",
+    "public-ip": "^2.3.5",
     "whatwg-fetch": "^2.0.3"
   }
 }

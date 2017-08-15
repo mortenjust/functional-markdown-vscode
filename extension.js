@@ -30,7 +30,8 @@ function activate(context) {
     defineDecorations()
     setupStatusBar()
     getPublicIp()
-    
+    simplifyTitlebar()
+
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => documentChanged(e)));
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -57,6 +58,11 @@ function maybeAutoSave(){
         // console.log("...aaaand saving all")
         vscode.workspace.saveAll() 
     }, 1000);
+}
+
+function simplifyTitlebar(){
+  // vscode.window.title = "KASSEMAD"
+  
 }
 
 function getPublicIp(){
@@ -119,7 +125,7 @@ function documentChanged(e) {
         console.log("Final string is " + queryString);
 
         // 9am in san francisco in copenhagen = 
-        var regexTimeInIn = /(\d+[ap]m) in (.+) in (.*)/
+        var regexTimeInIn = /((?:\d+:)*\d+(?:[ap]m)*) in ([A-Za-z]+) in (.*)/
         var regexTimeIn = /((?:\d+:)*\d+(?:[ap]m)*) in ([A-Za-z]+)/
         // var regexPctOf = /([\d]+[.\d]*) ?% of ([\d]+[.\d]*)/
         var regexPctOf = /([\d\.]+) ?% of ([\d\.]+)/
@@ -166,9 +172,7 @@ function documentChanged(e) {
             console.log(r)
             var formattedResult = "" + math.format((pct/100 * n), {notation:'fixed', precision: 2}).toLocaleString()
         }  else { 
-                // second test: Is it a date arithmetic? 
-                // third test: is it a general math query?
-                
+                // throw it to the date/math parsers
                 var result = chrono.parseDate(queryString)
                 var formattedResult = moment(result).format('MMM Do YYYY, h:mm a')
 
@@ -325,11 +329,7 @@ function registerCompletions(){
             return [ci]
         }
     });
-
-
-
 }
-
 
 function format(n) {
     return n.toLocaleString();
@@ -338,7 +338,6 @@ function format(n) {
 // this method is called when your extension is deactivated
 function deactivate() {
 }
-
 
   function fetchAndImportCurrencies () {
     // fetch actual currency conversion rates
@@ -366,12 +365,20 @@ function defineDecorations(){
         borderColor: '#5c6371',
         // backgroundColor: 'blue',        
         
-        textDecoration: 'font-size:70px',
+        textDecoration: 'margin-left:20px',
         // overviewRulerLane: vscode.OverviewRulerLane.Right
-        // overviewRulerColor: 'blue', // this is the scroll bar area
-        
+        // overviewRulerColor: 'blue', // this is the scroll bar area        
     })
     triggerUpdateDecorations()    
+}
+
+function updateDecorations(){
+  let activeEditor = vscode.window.activeTextEditor;
+  timezoneDecos = []
+  updateTimezoneDecoration(/London/gm, "London")
+  updateTimezoneDecoration(/Copenhagen/gm, "Copenhagen") 
+  updateTimezoneDecoration(/New York/gm, "New York")    
+  activeEditor.setDecorations(timezoneDecoration, timezoneDecos) 
 }
 
 function triggerUpdateDecorations(){
@@ -411,14 +418,6 @@ function updateTimezoneDecoration(cityNameRegexp, cityName){
     updateDecoration(cityNameRegexp, timeInCityString(cityName), timezoneDecoration)
 }
 
-function updateDecorations(){
-    let activeEditor = vscode.window.activeTextEditor;
-    timezoneDecos = []
-    updateTimezoneDecoration(/London/gm, "London")
-    updateTimezoneDecoration(/Copenhagen/gm, "Copenhagen") // these override each other for some reason. TODO
-    updateTimezoneDecoration(/New York/gm, "New York")    
-    activeEditor.setDecorations(timezoneDecoration, timezoneDecos) 
-}
 
 function timeInCityString(city){
     var timeString;
