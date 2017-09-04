@@ -17,6 +17,8 @@ var decorationTimeout;
 var timezoneDecoration;
 var timezoneDecos = [];
 
+var wordCountStatusBarItem;
+
 var externalIp;
 
 
@@ -88,10 +90,58 @@ publicIp.v6().then(ip => {
 });
 }
 
-function setupStatusBar(){
-    // vscode.window.setStatusBarMessage("oooh yes")    
-    // vscode.window.
+function setupStatusBar(){    
     
+}
+
+function getWordCount(doc)  {
+  let docContent = doc.getText();
+
+  // Parse out unwanted whitespace so the split is accurate
+  docContent = docContent.replace(/(< ([^>]+)<)/g, '').replace(/\s+/g, ' ');
+  docContent = docContent.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+  let wordCount = 0;
+  if (docContent != "") {
+      wordCount = docContent.split(" ").length;
+  }
+
+  return wordCount;
+}
+
+
+
+function updateWordCount(d){
+  const w = getWordCount(d)
+  console.log("There are "+w+" words")  
+  
+
+  // Create as needed
+      if (!wordCountStatusBarItem) {
+        wordCountStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+        wordCountStatusBarItem.text = "heje"
+        wordCountStatusBarItem.show()
+    } 
+
+    // Get the current text editor
+    let editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+        wordCountStatusBarItem.hide();
+        return;
+    }
+
+    // Only update status if an MD file
+    if (d.languageId === "markdown") {
+
+        // Update the status bar
+        wordCountStatusBarItem.text = w !== 1 ? `$(pencil) ${w} Words` : '$(pencil) 1 Word';
+        wordCountStatusBarItem.show();
+    } else {
+      wordCountStatusBarItem.hide();
+    }    
+
+
+
 }
 
 function documentChanged(e) {    
@@ -102,7 +152,7 @@ function documentChanged(e) {
     const pos = vscode.window.activeTextEditor.selection.active;
     const doc = vscode.window.activeTextEditor.document;
     // console.log("Just typed:"+justTyped)
-
+    updateWordCount(doc)
 
     if (justTyped == "()" || justTyped == "=") { // user is trying to do math
         console.log("Entering '( or ='");
@@ -141,13 +191,13 @@ function documentChanged(e) {
 
 
         if (regexTimeInIn.test(queryString)) {
-            console.log("> regexTimeInIn")
+            console.log("> Time IN IN ")
             var tzResult = regexTimeInIn.exec(queryString)
-            // console.log(tzResult)
+            console.log(tzResult) // TODO - this one is never executed
             var hhmm = tzResult[1]
             var fromCity = tzResult[2]
             var toCity = tzResult[3]
-            // console.log("ready to convert "+hhmm+" in the city of "+fromCity+" to the city of "+toCity)
+            console.log("ready to convert "+hhmm+" in the city of "+fromCity+" to the city of "+toCity)
 
             var fromTz =  getTimezoneForUserInput(fromCity)
             var toTz = getTimezoneForUserInput(toCity)
@@ -157,7 +207,7 @@ function documentChanged(e) {
 
             // 9am in Berlin =
         } else if (regexTimeIn.test(queryString)) {
-                console.log("> regexTimeIn")
+                console.log("> Time IN")
                 var r = regexTimeIn.exec(queryString)
                 var hhmm = r[1]
                 var fromTz = getTimezoneForUserInput(r[2])
