@@ -96,7 +96,6 @@ function setupStatusBar(){
 
 function getWordCount(doc)  {
   let docContent = doc.getText();
-
   // Parse out unwanted whitespace so the split is accurate
   docContent = docContent.replace(/(< ([^>]+)<)/g, '').replace(/\s+/g, ' ');
   docContent = docContent.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
@@ -104,16 +103,11 @@ function getWordCount(doc)  {
   if (docContent != "") {
       wordCount = docContent.split(" ").length;
   }
-
   return wordCount;
 }
 
-
-
 function updateWordCount(d){
   const w = getWordCount(d)
-  console.log("There are "+w+" words")  
-  
 
   // Create as needed
       if (!wordCountStatusBarItem) {
@@ -121,27 +115,19 @@ function updateWordCount(d){
         wordCountStatusBarItem.text = "heje"
         wordCountStatusBarItem.show()
     } 
-
-    // Get the current text editor
     let editor = vscode.window.activeTextEditor;
-
     if (!editor) {
         wordCountStatusBarItem.hide();
         return;
     }
-
     // Only update status if an MD file
     if (d.languageId === "markdown") {
-
         // Update the status bar
         wordCountStatusBarItem.text = w !== 1 ? `$(pencil) ${w} Words` : '$(pencil) 1 Word';
         wordCountStatusBarItem.show();
     } else {
       wordCountStatusBarItem.hide();
     }    
-
-
-
 }
 
 function documentChanged(e) {    
