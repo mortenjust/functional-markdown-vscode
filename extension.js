@@ -8,11 +8,15 @@ var momentTz = require("moment-timezone")
 var math = require('mathjs')
 var fetch = require('node-fetch')
 var geoip = require('geoip-lite');
+var tree = require('markdown-tree');
 var timezones = require('./timezones.js')
 const publicIp = require('public-ip');
-
+var path = require('path')
+var fsPath = require('fs-path');
+var mkdirp = require('mkdirp');
 
 var autoSaveTimer;
+var updateTopicTimer;
 var decorationTimeout;
 var timezoneDecoration;
 var timezoneDecos = [];
@@ -35,6 +39,9 @@ function activate(context) {
     setupStatusBar()
     getPublicIp()
     simplifyTitlebar()
+
+    
+    
 
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => documentChanged(e)));
 
@@ -130,14 +137,100 @@ function updateWordCount(d){
     }    
 }
 
+
+function maybeUpdateTopicFile(doc){
+    // console.log('maybeUpdateTopicFile');
+    
+    clearTimeout(updateTopicTimer)
+    updateTopicTimer = setTimeout(function() {
+        updateTopicFile(doc)
+    }, 2000);
+
+}
+
+function updateTopicFile(doc){
+    console.log('updateTopicFile');
+    
+    var t = tree(doc.getText() + "", [{ smartLists:false }])
+    // var t = tree("# here is \n What my body sdays these days. \n ## Lesser \n Here also.")
+
+    console.log("Here's the fucking tree")
+    console.log(t)
+    
+    //  save all the topics as files 
+    var topics = {} // topic["nasa"]    
+
+    for(var top of t.children){
+        if(top.type == "Heading"){
+            
+            var topTitle = top.text
+            for(var topic of top.children){
+                if(topic.type == "Heading"){ // date-level
+                    if(topic.text){
+                        var topicName = topic.text
+                        var add = "\n# " + topTitle + "\n"
+                        if(topics[topicName]){
+                           topics[topicName] = topics[topicName] + add                        
+                        } else {
+                           topics[topicName] = add                        
+                        }
+                  }                
+                    for(var contentChild of topic.tokens)        
+                        if(contentChild.text){            
+                            add = contentChild.text + "\n"                        
+                            topics[topicName] == "undefined" ? topics[topicName] = add : topics[topicName] += add
+                            // topics[topicName] += contentChild.text + "\n" 
+                    }
+                }
+            }
+        }
+    }
+
+    console.log('And here is the new content tree:');
+    console.log(topics);
+    saveTopicFiles(topics)
+}
+
+function saveTopicFiles(tree){
+    console.log('saveTopicFiles');
+    const workspace = vscode.workspace.rootPath;
+    const subDir = workspace+'/topics/';
+
+
+    for(var filename in tree){        
+        if(!filename.includes('.md')){break;} // ## this will be saved.md
+
+        console.log('ready to save value of '+filename);
+        
+        const fileContents = tree[filename];
+        // console.log('Which is actually ' + fileContents)
+         mkdirp(subDir)
+        fsPath.writeFile(subDir+filename, fileContents, function(err){
+            if(err){
+                console.log(err)
+            }
+        })
+    }
+}
+
+
+function joinContent(arr){ 
+    const o = arr.filter(function(val){return val}).join("")
+    return o
+} // joins content if it's not undefined
+
 function documentChanged(e) {    
     maybeAutoSave()
     triggerUpdateDecorations()
     
+
     const justTyped = e.contentChanges[0].text;
     const pos = vscode.window.activeTextEditor.selection.active;
     const doc = vscode.window.activeTextEditor.document;
     // console.log("Just typed:"+justTyped)
+    
+    maybeUpdateTopicFile(doc) 
+    
     updateWordCount(doc)
 
     if (justTyped == "()" || justTyped == "=") { // user is trying to do math
